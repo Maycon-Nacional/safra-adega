@@ -37,6 +37,8 @@ export interface FiltrosConsulta {
   paises: string[]
   precoMin: number | null
   precoMax: number | null
+  safraMin: number | null // null = sem limite
+  safraMax: number | null
   dataDe: string
   dataAte: string
   pronto: FiltroBooleano
@@ -50,6 +52,8 @@ export function filtrosVazios(): FiltrosConsulta {
     paises: [],
     precoMin: null,
     precoMax: null,
+    safraMin: null,
+    safraMax: null,
     dataDe: '',
     dataAte: '',
     pronto: 'todos',

@@ -8,6 +8,7 @@ const props = defineProps<{
   filtros: FiltrosConsulta
   paisesDisponiveis: string[]
   ativos: number
+  limitesSafra: [number, number]
 }>()
 
 const emit = defineEmits<{
@@ -24,6 +25,25 @@ const opcoesBooleanas: { valor: FiltroBooleano; texto: string }[] = [
   { valor: 'sim', texto: 'Sim' },
   { valor: 'nao', texto: 'Não' },
 ]
+
+// sem filtro, o controle fica nas pontas; encostar numa ponta remove aquele limite
+const faixaSafra = computed<[number, number]>(() => {
+  const [min, max] = props.limitesSafra
+  const de = props.filtros.safraMin ?? min
+  const ate = props.filtros.safraMax ?? max
+  return [Math.max(min, Math.min(de, max)), Math.min(max, Math.max(ate, min))]
+})
+
+function alterarSafra(valor: number[]) {
+  const [min, max] = props.limitesSafra
+  const de = Math.round(valor[0])
+  const ate = Math.round(valor[1])
+  emit('update:filtros', {
+    ...props.filtros,
+    safraMin: de <= min ? null : de,
+    safraMax: ate >= max ? null : ate,
+  })
+}
 
 const precoInvalido = computed(
   () => props.filtros.precoMin !== null && props.filtros.precoMax !== null && props.filtros.precoMin > props.filtros.precoMax,
@@ -121,6 +141,29 @@ const dataInvalida = computed(
         />
       </v-col>
 
+      <v-col cols="12">
+        <div class="grupo grupo-safra">
+          <div class="d-flex justify-space-between align-center w-100">
+            <span class="rotulo-grupo">Safra</span>
+            <span class="faixa-texto titulo-serifa">{{ faixaSafra[0] }} – {{ faixaSafra[1] }}</span>
+          </div>
+          <v-range-slider
+            :model-value="faixaSafra"
+            :min="limitesSafra[0]"
+            :max="limitesSafra[1]"
+            :step="1"
+            :disabled="limitesSafra[0] === limitesSafra[1]"
+            color="primary"
+            track-color="accent"
+            thumb-label
+            strict
+            hide-details
+            class="w-100"
+            aria-label="Faixa de safra"
+            @update:model-value="alterarSafra"
+          />
+        </div>
+      </v-col>
       <v-col cols="12" sm="6" lg="3">
         <div class="grupo">
           <span class="rotulo-grupo">Pronto para beber</span>
@@ -196,6 +239,17 @@ const dataInvalida = computed(
   padding: 6px 4px 6px 14px;
   border: 1px solid rgba(var(--v-border-color), 0.22);
   border-radius: 6px;
+}
+.grupo-safra {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 2px;
+  padding: 10px 18px 6px;
+}
+.faixa-texto {
+  font-size: 1rem;
+  color: rgb(var(--v-theme-primary));
+  font-variant-numeric: tabular-nums;
 }
 .rotulo-grupo {
   font-size: 0.9rem;

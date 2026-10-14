@@ -43,6 +43,8 @@ export function filtrosDaUrl(query: LocationQuery): FiltrosConsulta {
     paises: lista(query.pais),
     precoMin: numero(query.precoDe),
     precoMax: numero(query.precoAte),
+    safraMin: numero(query.safraDe),
+    safraMax: numero(query.safraAte),
     dataDe: data(query.de),
     dataAte: data(query.ate),
     pronto: booleano(query.pronto),
@@ -67,6 +69,8 @@ export function paraQuery(f: FiltrosConsulta, ordem: OrdemConsulta, modo: ModoCo
   if (f.paises.length) q.pais = f.paises.join(',')
   if (f.precoMin !== null) q.precoDe = String(f.precoMin)
   if (f.precoMax !== null) q.precoAte = String(f.precoMax)
+  if (f.safraMin !== null) q.safraDe = String(f.safraMin)
+  if (f.safraMax !== null) q.safraAte = String(f.safraMax)
   if (f.dataDe) q.de = f.dataDe
   if (f.dataAte) q.ate = f.dataAte
   if (f.pronto !== 'todos') q.pronto = f.pronto

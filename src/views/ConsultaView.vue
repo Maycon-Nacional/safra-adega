@@ -34,6 +34,13 @@ const opcoesOrdem = [
   { title: 'Safra mais antiga', value: 'safra' },
 ]
 
+// faixa do controle de safra: da safra mais antiga à mais recente cadastrada
+const limitesSafra = computed<[number, number]>(() => {
+  if (!vinhos.value.length) return [new Date().getFullYear() - 10, new Date().getFullYear()]
+  const safras = vinhos.value.map((v) => v.safra)
+  return [Math.min(...safras), Math.max(...safras)]
+})
+
 const paisesDisponiveis = computed(() =>
   [...new Set(vinhos.value.map((v) => v.pais))].sort((a, b) => a.localeCompare(b, 'pt-BR')),
 )
@@ -60,6 +67,8 @@ const resultados = computed(() => {
       (f.paises.length === 0 || f.paises.includes(v.pais)) &&
       (f.precoMin === null || v.preco >= f.precoMin) &&
       (f.precoMax === null || v.preco <= f.precoMax) &&
+      (f.safraMin === null || v.safra >= f.safraMin) &&
+      (f.safraMax === null || v.safra <= f.safraMax) &&
       (!f.dataDe || v.dataAquisicao >= f.dataDe) &&
       (!f.dataAte || v.dataAquisicao <= f.dataAte) &&
       atendeBooleano(f.pronto, v.prontoParaBeber) &&
@@ -83,6 +92,7 @@ const filtrosAtivos = computed(() => {
     f.tipos.length > 0,
     f.paises.length > 0,
     f.precoMin !== null || f.precoMax !== null,
+    f.safraMin !== null || f.safraMax !== null,
     !!f.dataDe || !!f.dataAte,
     f.pronto !== 'todos',
     f.organico !== 'todos',
@@ -123,6 +133,7 @@ const cabecalhos = [
         v-model:filtros="filtros"
         :paises-disponiveis="paisesDisponiveis"
         :ativos="filtrosAtivos"
+        :limites-safra="limitesSafra"
         @limpar="limparFiltros"
       />
     </div>
