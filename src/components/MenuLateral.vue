@@ -15,6 +15,7 @@ const itens = [
   { titulo: 'Início', icone: 'mdi-home-variant-outline', rota: '/' },
   { titulo: 'Gerenciar adega', icone: 'mdi-bottle-wine-outline', rota: '/adega' },
   { titulo: 'Consulta', icone: 'mdi-text-search-variant', rota: '/consulta' },
+  { titulo: 'Catálogo', icone: 'mdi-image-multiple-outline', rota: '/catalogo' },
 ]
 
 const totalGarrafas = computed(() => vinhos.value.reduce((soma, v) => soma + v.garrafas, 0))

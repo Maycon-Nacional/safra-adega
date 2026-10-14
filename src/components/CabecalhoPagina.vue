@@ -36,4 +36,12 @@ defineProps<{ sobretitulo: string; titulo: string; descricao?: string }>()
   gap: 10px;
   flex-wrap: wrap;
 }
+.acoes:empty {
+  display: none;
+}
+@media (max-width: 600px) {
+  .acoes {
+    width: 100%;
+  }
+}
 </style>

@@ -18,6 +18,12 @@ const router = createRouter({
       meta: { titulo: 'Consulta' },
     },
     {
+      path: '/catalogo',
+      name: 'catalogo',
+      component: () => import('@/views/CatalogoView.vue'),
+      meta: { titulo: 'Catálogo' },
+    },
+    {
       path: '/:caminho(.*)*',
       name: 'nao-encontrada',
       component: () => import('@/views/NaoEncontradaView.vue'),
