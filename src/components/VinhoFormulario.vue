@@ -7,6 +7,8 @@ import { buscarPaises, mensagemDeErro, type Pais } from '@/services/ibge'
 import { hojeIso } from '@/utils/formato'
 import { avisar } from '@/services/aviso'
 import EditorImagem from './EditorImagem.vue'
+import CampoData from './CampoData.vue'
+import CampoMoeda from './CampoMoeda.vue'
 
 const props = defineProps<{ modelValue: boolean; vinho: Vinho | null }>()
 const emit = defineEmits<{
@@ -27,9 +29,9 @@ interface ValoresFormulario {
   uva: string
   pais: string | null
   continente: string
-  safra: number | string | null
-  preco: number | string | null
-  garrafas: number | string | null
+  safra: number | null
+  preco: number | null
+  garrafas: number | null
   dataAquisicao: string
   prontoParaBeber: boolean
   organico: boolean
@@ -309,16 +311,37 @@ const enviar = handleSubmit(
           <div class="secao">Adega</div>
           <v-row dense>
             <v-col cols="6" md="3">
-              <v-text-field v-model="safra" v-bind="safraProps" label="Safra *" type="number" min="1900" :max="ANO_ATUAL" />
+              <v-number-input
+                v-model="safra"
+                v-bind="safraProps"
+                label="Safra *"
+                :min="1900"
+                :max="ANO_ATUAL"
+                control-variant="stacked"
+                inset
+              />
             </v-col>
             <v-col cols="6" md="3">
-              <v-text-field v-model="preco" v-bind="precoProps" label="Preço (R$) *" type="number" min="0" step="0.01" prefix="R$" />
+              <CampoMoeda v-model="preco" :error-messages="precoProps['error-messages']" label="Preço *" />
             </v-col>
             <v-col cols="6" md="3">
-              <v-text-field v-model="garrafas" v-bind="garrafasProps" label="Garrafas *" type="number" min="0" max="999" />
+              <v-number-input
+                v-model="garrafas"
+                v-bind="garrafasProps"
+                label="Garrafas *"
+                :min="0"
+                :max="999"
+                control-variant="stacked"
+                inset
+              />
             </v-col>
             <v-col cols="6" md="3">
-              <v-text-field v-model="dataAquisicao" v-bind="dataProps" label="Aquisição *" type="date" :max="hojeIso()" />
+              <CampoData
+                v-model="dataAquisicao"
+                :error-messages="dataProps['error-messages']"
+                label="Aquisição *"
+                :max="hojeIso()"
+              />
             </v-col>
           </v-row>
 

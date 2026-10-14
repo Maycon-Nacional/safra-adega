@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import CampoData from './CampoData.vue'
+import CampoMoeda from './CampoMoeda.vue'
 import { TIPOS_VINHO, type FiltrosConsulta, type FiltroBooleano } from '@/types/vinho'
 
 const props = defineProps<{
@@ -15,12 +17,6 @@ const emit = defineEmits<{
 
 function alterar<K extends keyof FiltrosConsulta>(campo: K, valor: FiltrosConsulta[K]) {
   emit('update:filtros', { ...props.filtros, [campo]: valor })
-}
-
-function numeroOuNulo(valor: string | number | null): number | null {
-  if (valor === null || valor === '') return null
-  const n = Number(valor)
-  return Number.isNaN(n) ? null : n
 }
 
 const opcoesBooleanas: { valor: FiltroBooleano; texto: string }[] = [
@@ -85,47 +81,43 @@ const dataInvalida = computed(
         />
       </v-col>
       <v-col cols="6" sm="3" lg="3">
-        <v-text-field
+        <CampoMoeda
           :model-value="filtros.precoMin"
           label="Preço de"
-          type="number"
-          min="0"
-          prefix="R$"
           :error="precoInvalido"
           hide-details
-          @update:model-value="alterar('precoMin', numeroOuNulo($event))"
+          clearable
+          @update:model-value="alterar('precoMin', $event)"
         />
       </v-col>
       <v-col cols="6" sm="3" lg="3">
-        <v-text-field
+        <CampoMoeda
           :model-value="filtros.precoMax"
           label="Preço até"
-          type="number"
-          min="0"
-          prefix="R$"
           :error="precoInvalido"
           hide-details
-          @update:model-value="alterar('precoMax', numeroOuNulo($event))"
+          clearable
+          @update:model-value="alterar('precoMax', $event)"
         />
       </v-col>
       <v-col cols="12" sm="3" lg="3">
-        <v-text-field
+        <CampoData
           :model-value="filtros.dataDe"
           label="Adquirido de"
-          type="date"
           :error="dataInvalida"
           hide-details
-          @update:model-value="alterar('dataDe', $event ?? '')"
+          clearable
+          @update:model-value="alterar('dataDe', $event)"
         />
       </v-col>
       <v-col cols="12" sm="3" lg="3">
-        <v-text-field
+        <CampoData
           :model-value="filtros.dataAte"
           label="Adquirido até"
-          type="date"
           :error="dataInvalida"
           hide-details
-          @update:model-value="alterar('dataAte', $event ?? '')"
+          clearable
+          @update:model-value="alterar('dataAte', $event)"
         />
       </v-col>
 
