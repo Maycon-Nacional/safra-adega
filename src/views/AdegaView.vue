@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { vinhos, criarVinho, atualizarVinho, removerVinho } from '@/services/storage'
 import { avisar } from '@/services/aviso'
 import { formatarData, formatarMoeda } from '@/utils/formato'
@@ -11,6 +11,14 @@ import SeloTipo from '@/components/SeloTipo.vue'
 import FotoVinho from '@/components/FotoVinho.vue'
 
 const busca = ref('')
+const soEstoqueBaixo = ref(false)
+
+// 0 garrafas = esgotado; 1 garrafa = última unidade
+const estoqueBaixo = computed(() => vinhos.value.filter((v) => v.garrafas <= 1))
+const esgotados = computed(() => estoqueBaixo.value.filter((v) => v.garrafas === 0).length)
+const itensTabela = computed(() => (soEstoqueBaixo.value ? estoqueBaixo.value : vinhos.value))
+
+const propsLinha = ({ item }: { item: Vinho }) => (item.garrafas <= 1 ? { class: 'linha-estoque-baixo' } : {})
 const formularioAberto = ref(false)
 const emEdicao = ref<Vinho | null>(null)
 const confirmacaoAberta = ref(false)
@@ -88,7 +96,30 @@ function confirmarExclusao() {
       </template>
     </CabecalhoPagina>
 
-    <v-card class="cartao-papel surgir" style="--i: 2" flat>
+    <v-expand-transition>
+      <div v-if="estoqueBaixo.length" class="alerta-estoque surgir" style="--i: 2" role="status">
+        <div class="alerta-icone"><v-icon size="22">mdi-bottle-wine-outline</v-icon></div>
+        <div class="flex-grow-1">
+          <div class="font-weight-bold">
+            {{ estoqueBaixo.length }} {{ estoqueBaixo.length === 1 ? 'rótulo com estoque baixo' : 'rótulos com estoque baixo' }}
+          </div>
+          <div class="text-body-2 text-medium-emphasis">
+            <template v-if="esgotados">{{ esgotados }} {{ esgotados === 1 ? 'esgotado' : 'esgotados' }} e </template>
+            {{ estoqueBaixo.length - esgotados }} com a última garrafa.
+          </div>
+        </div>
+        <v-btn
+          :variant="soEstoqueBaixo ? 'flat' : 'tonal'"
+          color="warning"
+          :prepend-icon="soEstoqueBaixo ? 'mdi-filter-remove-outline' : 'mdi-filter-outline'"
+          @click="soEstoqueBaixo = !soEstoqueBaixo"
+        >
+          {{ soEstoqueBaixo ? 'Mostrar todos' : 'Ver só estes' }}
+        </v-btn>
+      </div>
+    </v-expand-transition>
+
+    <v-card class="cartao-papel surgir" style="--i: 3" flat>
       <div class="d-flex align-center flex-wrap ga-4 pa-4">
         <div class="titulo-serifa text-h6">
           {{ vinhos.length }} {{ vinhos.length === 1 ? 'rótulo cadastrado' : 'rótulos cadastrados' }}
@@ -108,7 +139,8 @@ function confirmarExclusao() {
 
       <v-data-table
         :headers="cabecalhos"
-        :items="vinhos"
+        :items="itensTabela"
+        :row-props="propsLinha"
         :search="busca ?? ''"
         item-value="id"
         class="tabela-adega"
@@ -133,7 +165,13 @@ function confirmarExclusao() {
         </template>
         <template #item.preco="{ item }">{{ formatarMoeda(item.preco) }}</template>
         <template #item.garrafas="{ item }">
-          <span :class="{ 'text-error font-weight-bold': item.garrafas === 0 }">{{ item.garrafas }}</span>
+          <v-chip v-if="item.garrafas === 0" size="small" color="error" variant="tonal" prepend-icon="mdi-alert-circle-outline">
+            Esgotado
+          </v-chip>
+          <v-chip v-else-if="item.garrafas === 1" size="small" color="warning" variant="tonal" prepend-icon="mdi-bottle-wine-outline">
+            Última
+          </v-chip>
+          <span v-else>{{ item.garrafas }}</span>
         </template>
         <template #item.dataAquisicao="{ item }">{{ formatarData(item.dataAquisicao) }}</template>
         <template #item.prontoParaBeber="{ item }">
@@ -187,6 +225,38 @@ function confirmarExclusao() {
 </template>
 
 <style scoped>
+.alerta-estoque {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 14px 18px;
+  margin-bottom: 18px;
+  border-radius: 14px;
+  background: rgba(var(--v-theme-warning), 0.09);
+  border: 1px solid rgba(var(--v-theme-warning), 0.3);
+}
+.alerta-icone {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  color: rgb(var(--v-theme-warning));
+  background: rgba(var(--v-theme-warning), 0.15);
+  animation: pulsar 2.4s ease-in-out infinite;
+}
+@keyframes pulsar {
+  50% {
+    box-shadow: 0 0 0 6px rgba(var(--v-theme-warning), 0.08);
+  }
+}
+.tabela-adega :deep(.linha-estoque-baixo) {
+  background: rgba(var(--v-theme-warning), 0.05);
+}
+.tabela-adega :deep(.linha-estoque-baixo td:first-child) {
+  box-shadow: inset 3px 0 0 rgb(var(--v-theme-warning));
+}
 .miniatura {
   width: 36px;
   flex-shrink: 0;
