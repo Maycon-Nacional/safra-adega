@@ -1,17 +1,29 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { vinhos } from '@/services/storage'
 import { filtrosVazios, type FiltrosConsulta, type FiltroBooleano, type Vinho } from '@/types/vinho'
 import { formatarData, formatarMoeda, normalizar, simNao } from '@/utils/formato'
+import { filtrosDaUrl, modoDaUrl, ordemDaUrl, paraQuery, type ModoConsulta, type OrdemConsulta } from '@/utils/filtros-url'
 import CabecalhoPagina from '@/components/CabecalhoPagina.vue'
 import BarraFiltros from '@/components/BarraFiltros.vue'
 import CartaoVinho from '@/components/CartaoVinho.vue'
 import SeloTipo from '@/components/SeloTipo.vue'
 import ContadorAnimado from '@/components/ContadorAnimado.vue'
 
-const filtros = ref<FiltrosConsulta>(filtrosVazios())
-const modo = ref<'cartoes' | 'tabela'>('cartoes')
-const ordem = ref<'recentes' | 'rotulo' | 'precoAsc' | 'precoDesc' | 'safra'>('recentes')
+const route = useRoute()
+const router = useRouter()
+
+// Os filtros começam com o que estiver na URL, assim a consulta pode ser recarregada ou compartilhada.
+const filtros = ref<FiltrosConsulta>(filtrosDaUrl(route.query))
+const modo = ref<ModoConsulta>(modoDaUrl(route.query))
+const ordem = ref<OrdemConsulta>(ordemDaUrl(route.query))
+
+watch(
+  [filtros, ordem, modo],
+  () => router.replace({ query: paraQuery(filtros.value, ordem.value, modo.value) }),
+  { deep: true },
+)
 
 const opcoesOrdem = [
   { title: 'Aquisição mais recente', value: 'recentes' },
