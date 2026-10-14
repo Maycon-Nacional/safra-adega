@@ -8,6 +8,7 @@ import CabecalhoPagina from '@/components/CabecalhoPagina.vue'
 import VinhoFormulario from '@/components/VinhoFormulario.vue'
 import ConfirmarExclusao from '@/components/ConfirmarExclusao.vue'
 import SeloTipo from '@/components/SeloTipo.vue'
+import FotoVinho from '@/components/FotoVinho.vue'
 
 const busca = ref('')
 const formularioAberto = ref(false)
@@ -16,7 +17,7 @@ const confirmacaoAberta = ref(false)
 const paraExcluir = ref<Vinho | null>(null)
 
 const cabecalhos = [
-  { title: 'Rótulo', key: 'rotulo', minWidth: 220 },
+  { title: 'Rótulo', key: 'rotulo', minWidth: 260 },
   { title: 'Tipo', key: 'tipo' },
   { title: 'País', key: 'pais' },
   { title: 'Safra', key: 'safra', align: 'end' as const },
@@ -48,8 +49,8 @@ function salvar(dados: VinhoSemId, id: number | null) {
       avisar(`Alterações em “${dados.rotulo}” salvas.`)
     }
     formularioAberto.value = false
-  } catch {
-    avisar('Não foi possível salvar. Verifique o armazenamento do navegador.', 'erro')
+  } catch (erro) {
+    avisar(erro instanceof Error ? erro.message : 'Não foi possível salvar o registro.', 'erro')
   }
 }
 
@@ -119,9 +120,12 @@ function confirmarExclusao() {
         :mobile-breakpoint="'sm'"
       >
         <template #item.rotulo="{ item }">
-          <div class="py-2">
-            <div class="font-weight-bold">{{ item.rotulo }}</div>
-            <div class="text-caption text-medium-emphasis">{{ item.produtor }} · {{ item.uva }}</div>
+          <div class="d-flex align-center ga-3 py-2">
+            <FotoVinho :imagem="item.imagem" :tipo="item.tipo" class="miniatura" />
+            <div>
+              <div class="font-weight-bold">{{ item.rotulo }}</div>
+              <div class="text-caption text-medium-emphasis">{{ item.produtor }} · {{ item.uva }}</div>
+            </div>
           </div>
         </template>
         <template #item.tipo="{ item }">
@@ -183,6 +187,11 @@ function confirmarExclusao() {
 </template>
 
 <style scoped>
+.miniatura {
+  width: 36px;
+  flex-shrink: 0;
+  border-radius: 6px;
+}
 .campo-busca {
   max-width: 280px;
   min-width: 200px;

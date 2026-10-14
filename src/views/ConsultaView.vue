@@ -10,6 +10,7 @@ import BarraFiltros from '@/components/BarraFiltros.vue'
 import CartaoVinho from '@/components/CartaoVinho.vue'
 import SeloTipo from '@/components/SeloTipo.vue'
 import ContadorAnimado from '@/components/ContadorAnimado.vue'
+import FotoVinho from '@/components/FotoVinho.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -182,7 +183,12 @@ const cabecalhos = [
           items-per-page-text="Itens por página"
           :mobile-breakpoint="'sm'"
         >
-          <template #item.rotulo="{ item }"><strong>{{ item.rotulo }}</strong></template>
+          <template #item.rotulo="{ item }">
+            <div class="d-flex align-center ga-3 py-2">
+              <FotoVinho :imagem="item.imagem" :tipo="item.tipo" class="miniatura" />
+              <strong>{{ item.rotulo }}</strong>
+            </div>
+          </template>
           <template #item.tipo="{ item }"><SeloTipo :tipo="item.tipo" /></template>
           <template #item.preco="{ item }">{{ formatarMoeda(item.preco) }}</template>
           <template #item.dataAquisicao="{ item }">{{ formatarData(item.dataAquisicao) }}</template>
@@ -206,6 +212,11 @@ const cabecalhos = [
 </template>
 
 <style scoped>
+.miniatura {
+  width: 32px;
+  flex-shrink: 0;
+  border-radius: 6px;
+}
 .barra-resultados {
   display: flex;
   justify-content: space-between;

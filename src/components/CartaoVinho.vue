@@ -3,6 +3,7 @@ import type { Vinho } from '@/types/vinho'
 import { COR_TIPO } from '@/types/vinho'
 import { formatarData, formatarMoeda, simNao } from '@/utils/formato'
 import SeloTipo from './SeloTipo.vue'
+import FotoVinho from './FotoVinho.vue'
 
 defineProps<{ vinho: Vinho }>()
 </script>
@@ -14,8 +15,13 @@ defineProps<{ vinho: Vinho }>()
       <span class="safra titulo-serifa">{{ vinho.safra }}</span>
     </div>
 
-    <h3 class="titulo-serifa rotulo">{{ vinho.rotulo }}</h3>
-    <div class="produtor">{{ vinho.produtor }}</div>
+    <div class="cabeca">
+      <FotoVinho :imagem="vinho.imagem" :tipo="vinho.tipo" :alt="vinho.rotulo" class="miniatura" />
+      <div>
+        <h3 class="titulo-serifa rotulo">{{ vinho.rotulo }}</h3>
+        <div class="produtor">{{ vinho.produtor }}</div>
+      </div>
+    </div>
 
     <dl class="dados">
       <div>
@@ -101,10 +107,21 @@ defineProps<{ vinho: Vinho }>()
 .cartao:hover .safra {
   color: var(--cor);
 }
+.cabeca {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 14px;
+}
+.miniatura {
+  width: 54px;
+  flex-shrink: 0;
+  border-radius: 8px;
+  box-shadow: 0 8px 16px -10px rgba(60, 20, 30, 0.6);
+}
 .rotulo {
   font-size: 1.3rem;
   line-height: 1.2;
-  margin-top: 14px;
 }
 .produtor {
   color: rgba(var(--v-theme-on-surface), 0.6);
