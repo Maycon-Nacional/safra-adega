@@ -5,7 +5,7 @@ export const ACERVO_INICIAL: Vinho[] = [
   {
     id: 1,
     rotulo: 'Gran Reserva Malbec',
-    produtor: 'Bodega Altos del Plata',
+    produtor: 'Bodega Norton',
     tipo: 'Tinto',
     uva: 'Malbec',
     pais: 'Argentina',
@@ -17,6 +17,7 @@ export const ACERVO_INICIAL: Vinho[] = [
     prontoParaBeber: true,
     organico: false,
     notas: 'Ameixa madura, violeta e um toque de baunilha. Guardar até 2028.',
+    imagem: 'vinhos/gran-reserva-malbec.webp',
   },
   {
     id: 2,
@@ -33,6 +34,7 @@ export const ACERVO_INICIAL: Vinho[] = [
     prontoParaBeber: true,
     organico: false,
     notas: 'Cítrico e mineral. Acompanha bem frutos do mar.',
+    imagem: 'vinhos/vinho-verde-alvarinho.webp',
   },
   {
     id: 3,
@@ -49,11 +51,12 @@ export const ACERVO_INICIAL: Vinho[] = [
     prontoParaBeber: true,
     organico: false,
     notas: 'Método tradicional, perlage fino. Reservado para o Réveillon.',
+    imagem: 'vinhos/brut-nature-serra-gaucha.webp',
   },
   {
     id: 4,
     rotulo: 'Chianti Classico Riserva',
-    produtor: 'Castello di Ama',
+    produtor: 'Rocca delle Macìe',
     tipo: 'Tinto',
     uva: 'Sangiovese',
     pais: 'Itália',
@@ -65,6 +68,7 @@ export const ACERVO_INICIAL: Vinho[] = [
     prontoParaBeber: false,
     organico: true,
     notas: 'Taninos ainda firmes. Abrir a partir de 2027.',
+    imagem: 'vinhos/chianti-classico-riserva.webp',
   },
   {
     id: 5,
@@ -81,11 +85,12 @@ export const ACERVO_INICIAL: Vinho[] = [
     prontoParaBeber: true,
     organico: true,
     notas: 'Pêssego branco e casca de laranja. Servir bem gelado.',
+    imagem: 'vinhos/cotes-de-provence-rose.webp',
   },
   {
     id: 6,
     rotulo: 'Porto Tawny 10 Anos',
-    produtor: 'Quinta do Noval',
+    produtor: 'Niepoort',
     tipo: 'Fortificado',
     uva: 'Touriga Nacional, Tinta Roriz',
     pais: 'Portugal',
@@ -97,11 +102,12 @@ export const ACERVO_INICIAL: Vinho[] = [
     prontoParaBeber: true,
     organico: false,
     notas: 'Nozes, figo seco e caramelo. Garrafa aberta dura semanas.',
+    imagem: 'vinhos/porto-tawny-10-anos.webp',
   },
   {
     id: 7,
     rotulo: 'Carmenère Gran Reserva',
-    produtor: 'Viña Ventisquero',
+    produtor: 'Viña Apaltagua',
     tipo: 'Tinto',
     uva: 'Carmenère',
     pais: 'Chile',
@@ -113,6 +119,7 @@ export const ACERVO_INICIAL: Vinho[] = [
     prontoParaBeber: true,
     organico: false,
     notas: 'Pimentão assado e especiarias. Última garrafa aberta em agosto.',
+    imagem: 'vinhos/carmenere-gran-reserva.webp',
   },
   {
     id: 8,
@@ -129,5 +136,6 @@ export const ACERVO_INICIAL: Vinho[] = [
     prontoParaBeber: false,
     organico: true,
     notas: 'Damasco e mel, acidez viva. Meia garrafa de 375 ml.',
+    imagem: 'vinhos/late-harvest-riesling.webp',
   },
 ]

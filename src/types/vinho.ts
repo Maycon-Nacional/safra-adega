@@ -24,6 +24,7 @@ export interface Vinho {
   prontoParaBeber: boolean
   organico: boolean
   notas: string
+  imagem: string // caminho relativo (vinhos/...) ou imagem enviada (data URL); vazio quando não há foto
 }
 
 export type VinhoSemId = Omit<Vinho, 'id'>

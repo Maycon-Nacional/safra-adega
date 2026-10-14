@@ -30,3 +30,10 @@ export function hojeIso(): string {
   const dia = String(d.getDate()).padStart(2, '0')
   return `${d.getFullYear()}-${mes}-${dia}`
 }
+
+/** Endereço da foto: imagens enviadas já são data URL; as do acervo ficam em public/vinhos. */
+export function urlImagem(imagem: string): string {
+  if (!imagem) return ''
+  if (/^(data:|https?:)/.test(imagem)) return imagem
+  return import.meta.env.BASE_URL + imagem.replace(/^\//, '')
+}

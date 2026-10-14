@@ -18,14 +18,28 @@ function lerDoStorage(): Vinho[] {
       return structuredClone(ACERVO_INICIAL)
     }
     const dados = JSON.parse(bruto)
-    return Array.isArray(dados) ? (dados as Vinho[]) : []
+    return Array.isArray(dados) ? (dados as Vinho[]).map(completarImagem) : []
   } catch {
     return []
   }
 }
 
+/** Registros salvos antes do campo de imagem recebem a foto do acervo inicial correspondente. */
+function completarImagem(vinho: Vinho): Vinho {
+  if (typeof vinho.imagem === 'string') return vinho
+  const original = ACERVO_INICIAL.find((v) => v.id === vinho.id && v.rotulo === vinho.rotulo)
+  return { ...vinho, imagem: original?.imagem ?? '' }
+}
+
 function gravarNoStorage(): void {
-  localStorage.setItem(CHAVE, JSON.stringify(vinhos.value))
+  try {
+    localStorage.setItem(CHAVE, JSON.stringify(vinhos.value))
+  } catch (erro) {
+    if (erro instanceof DOMException && erro.name === 'QuotaExceededError') {
+      throw new Error('O armazenamento do navegador está cheio. Remova algumas fotos e tente de novo.')
+    }
+    throw erro
+  }
 }
 
 export const vinhos = ref<Vinho[]>(lerDoStorage())
@@ -37,15 +51,26 @@ function proximoId(): number {
 export function criarVinho(dados: VinhoSemId): Vinho {
   const novo: Vinho = { ...dados, id: proximoId() }
   vinhos.value.push(novo)
-  gravarNoStorage()
+  try {
+    gravarNoStorage()
+  } catch (erro) {
+    vinhos.value.pop()
+    throw erro
+  }
   return novo
 }
 
 export function atualizarVinho(vinho: Vinho): void {
   const indice = vinhos.value.findIndex((v) => v.id === vinho.id)
   if (indice === -1) throw new Error('Registro não encontrado.')
+  const anterior = vinhos.value[indice]
   vinhos.value.splice(indice, 1, { ...vinho })
-  gravarNoStorage()
+  try {
+    gravarNoStorage()
+  } catch (erro) {
+    vinhos.value.splice(indice, 1, anterior)
+    throw erro
+  }
 }
 
 export function removerVinho(id: number): void {
