@@ -25,6 +25,7 @@ Sistema para organizar uma adega pessoal de vinhos. A entidade cadastrada é o *
 | Pronto para beber | booleano | `v-switch` |
 | Orgânico | booleano | `v-switch` |
 | Notas de degustação | texto (opcional) | `v-textarea` |
+| Foto da garrafa | imagem (opcional) | componente `EditorImagem` |
 
 ## Funcionalidades
 
@@ -49,6 +50,12 @@ Sistema para organizar uma adega pessoal de vinhos. A entidade cadastrada é o *
   **Axios** (`src/services/ibge.ts`). O país escolhido preenche o continente automaticamente; o campo mostra
   `:loading` durante a requisição e erros (sem internet, tempo esgotado, erro do servidor) são tratados com
   `try/catch`, aviso ao usuário e botão para tentar de novo.
+- **Fotos dos vinhos**: no cadastro e na edição é possível arrastar ou escolher uma imagem (JPG, PNG ou WebP,
+  até 8 MB), com pré-visualização e editor de enquadramento: arrastar para posicionar, zoom, girar, opção
+  **Preencher** (corta as bordas) ou **Ajustar inteira** (foto completa com fundo neutro). A imagem final é
+  reduzida para 600 × 800 px em WebP antes de ser salva, para caber no `localStorage`.
+- **Catálogo** (`/catalogo`): vitrine somente leitura com os vinhos em cartões com foto, filtro por tipo, busca
+  e janela de detalhes com a ficha completa.
 - Página inicial com resumo da adega, menu lateral (`v-navigation-drawer`) com rotas do **Vue Router**,
   tema claro/escuro e layout responsivo.
 
@@ -56,13 +63,18 @@ Sistema para organizar uma adega pessoal de vinhos. A entidade cadastrada é o *
 
 ```
 src/
-├── components/   MenuLateral, VinhoFormulario, BarraFiltros, CartaoVinho, ConfirmarExclusao, ...
-├── views/        InicioView, AdegaView (CRUD), ConsultaView, NaoEncontradaView
+├── components/   MenuLateral, VinhoFormulario, EditorImagem, BarraFiltros, CartaoVinho, CartaoCatalogo, ...
+├── views/        InicioView, AdegaView (CRUD), ConsultaView, CatalogoView, NaoEncontradaView
 ├── services/     storage.ts (localStorage), ibge.ts (Axios), aviso.ts (snackbar)
 ├── router/       rotas da aplicação
 ├── types/        tipo Vinho e filtros
 └── utils/        formatação de moeda, data e texto
 ```
+
+## Créditos das imagens
+
+As fotos do acervo inicial são do Wikimedia Commons, sob licenças Creative Commons. Autor e licença de cada
+uma estão em [`public/vinhos/CREDITOS.md`](public/vinhos/CREDITOS.md).
 
 ## Tecnologias
 
