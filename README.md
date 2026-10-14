@@ -2,6 +2,10 @@
 
 Avaliação 2 – FACET-SNP-310 – Frameworks Modernos para Desenvolvimento de Sistemas (2026.2)
 
+## Prévia online
+
+https://maycon-nacional.github.io/safra-adega/
+
 ## Integrantes
 
 - Maycon Vasconcellos – @Maycon-Nacional
@@ -95,3 +99,8 @@ npm run dev
 ```
 
 Depois, acesse o endereço exibido no terminal (por padrão http://localhost:5173).
+
+No primeiro acesso, com o `localStorage` vazio, o sistema já carrega automaticamente um acervo inicial de 8
+vinhos com fotos (`src/data/acervo-inicial.ts`), então as páginas não abrem vazias. Para voltar a esse estado,
+basta apagar a chave `safra:vinhos` do `localStorage` do navegador (DevTools → Application → Local Storage) e
+recarregar a página.
