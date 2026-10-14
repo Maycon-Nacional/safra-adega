@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { vinhos } from '@/services/storage'
 import { buscarCotacao, mensagemDeErroCotacao, type Cotacao } from '@/services/cotacao'
 import { avisar } from '@/services/aviso'
@@ -16,19 +16,45 @@ const prontos = computed(() => vinhos.value.filter((v) => v.prontoParaBeber && v
 const cotacao = ref<Cotacao | null>(null)
 const carregandoCotacao = ref(false)
 const erroCotacao = ref('')
+const recemAtualizado = ref(false)
+const rodada = ref(0) // muda a cada atualização para os valores animarem de novo
+
+const ETAPAS = ['Buscando cotação', 'Convertendo valores', 'Atualizando preços']
+const etapa = ref(ETAPAS[0])
+let timerEtapa = 0
+let timerAviso = 0
+
+const esperar = (ms: number) => new Promise((resolver) => setTimeout(resolver, ms))
 
 async function carregarCotacao() {
+  if (carregandoCotacao.value) return
   carregandoCotacao.value = true
+  recemAtualizado.value = false
   erroCotacao.value = ''
+  let i = 0
+  etapa.value = ETAPAS[0]
+  timerEtapa = window.setInterval(() => (etapa.value = ETAPAS[++i % ETAPAS.length]), 650)
   try {
-    cotacao.value = await buscarCotacao()
+    // tempo mínimo para a atualização ficar perceptível mesmo quando a API responde muito rápido
+    const [nova] = await Promise.all([buscarCotacao(), esperar(1600)])
+    cotacao.value = nova
+    rodada.value++
+    recemAtualizado.value = true
+    clearTimeout(timerAviso)
+    timerAviso = window.setTimeout(() => (recemAtualizado.value = false), 2600)
   } catch (erro) {
     erroCotacao.value = mensagemDeErroCotacao(erro)
     avisar(erroCotacao.value, 'erro')
   } finally {
+    clearInterval(timerEtapa)
     carregandoCotacao.value = false
   }
 }
+
+onBeforeUnmount(() => {
+  clearInterval(timerEtapa)
+  clearTimeout(timerAviso)
+})
 
 onMounted(carregarCotacao)
 
@@ -130,50 +156,73 @@ const indicadores = computed(() => [
             <strong>{{ formatarMoeda(totalRotulos ? vinhos.reduce((s, v) => s + v.preco, 0) / totalRotulos : 0) }}</strong>
           </div>
 
-          <div class="cambio mt-5" aria-live="polite">
+          <div class="cambio mt-5" :class="{ ocupado: carregandoCotacao }" aria-live="polite">
+            <div class="barra-progresso" />
             <div class="d-flex justify-space-between align-center mb-3">
               <span class="sobretitulo cambio-titulo">Em moeda estrangeira</span>
-              <v-btn
-                icon="mdi-refresh"
-                size="x-small"
-                variant="text"
-                color="#F1D9A6"
-                :loading="carregandoCotacao"
+              <button
+                type="button"
+                class="botao-atualizar"
+                :disabled="carregandoCotacao"
                 aria-label="Atualizar cotação"
                 @click="carregarCotacao"
-              />
+              >
+                <v-icon size="18" :class="{ girando: carregandoCotacao }">mdi-refresh</v-icon>
+              </button>
             </div>
 
-            <div v-if="carregandoCotacao && !cotacao" class="moedas">
-              <v-skeleton-loader v-for="n in 2" :key="n" type="text" class="esqueleto" />
-            </div>
-
-            <div v-else-if="erroCotacao && !cotacao" class="erro-cambio">
+            <div v-if="erroCotacao && !cotacao && !carregandoCotacao" class="erro-cambio">
               <span>{{ erroCotacao }}</span>
-              <v-btn size="small" variant="outlined" color="#F1D9A6" :loading="carregandoCotacao" @click="carregarCotacao">
-                Tentar de novo
-              </v-btn>
+              <v-btn size="small" variant="outlined" color="#F1D9A6" @click="carregarCotacao">Tentar de novo</v-btn>
             </div>
 
-            <template v-else-if="cotacao">
-              <div class="moedas">
-                <div class="moeda">
-                  <span class="moeda-sigla">USD</span>
-                  <span class="titulo-serifa moeda-valor">
-                    <ContadorAnimado :valor="valorAcervo / cotacao.dolar" :formatar="(n) => emDolar.format(n)" />
-                  </span>
-                  <span class="moeda-taxa">US$ 1 = {{ formatarMoeda(cotacao.dolar) }}</span>
-                </div>
-                <div class="moeda">
-                  <span class="moeda-sigla">EUR</span>
-                  <span class="titulo-serifa moeda-valor">
-                    <ContadorAnimado :valor="valorAcervo / cotacao.euro" :formatar="(n) => emEuro.format(n)" />
-                  </span>
-                  <span class="moeda-taxa">€ 1 = {{ formatarMoeda(cotacao.euro) }}</span>
-                </div>
+            <div v-else class="moedas" :class="{ esmaecido: carregandoCotacao }">
+              <div class="moeda">
+                <span class="moeda-sigla">USD</span>
+                <span class="titulo-serifa moeda-valor">
+                  <ContadorAnimado
+                    v-if="cotacao"
+                    :key="`usd-${rodada}`"
+                    :valor="valorAcervo / cotacao.dolar"
+                    :formatar="(n) => emDolar.format(n)"
+                    :duracao="1100"
+                  />
+                  <span v-else class="traco" />
+                </span>
+                <span class="moeda-taxa">
+                  {{ cotacao ? `US$ 1 = ${formatarMoeda(cotacao.dolar)}` : '&nbsp;' }}
+                </span>
               </div>
-              <div class="cambio-rodape">Cotação de {{ dataCotacao }} · AwesomeAPI</div>
-            </template>
+              <div class="moeda">
+                <span class="moeda-sigla">EUR</span>
+                <span class="titulo-serifa moeda-valor">
+                  <ContadorAnimado
+                    v-if="cotacao"
+                    :key="`eur-${rodada}`"
+                    :valor="valorAcervo / cotacao.euro"
+                    :formatar="(n) => emEuro.format(n)"
+                    :duracao="1100"
+                  />
+                  <span v-else class="traco" />
+                </span>
+                <span class="moeda-taxa">
+                  {{ cotacao ? `€ 1 = ${formatarMoeda(cotacao.euro)}` : '&nbsp;' }}
+                </span>
+              </div>
+            </div>
+
+            <div class="cambio-rodape">
+              <Transition name="troca" mode="out-in">
+                <span v-if="carregandoCotacao" :key="etapa" class="status">
+                  {{ etapa }}<span class="pontos"><i>.</i><i>.</i><i>.</i></span>
+                </span>
+                <span v-else-if="recemAtualizado" key="ok" class="status ok">
+                  <v-icon size="14">mdi-check</v-icon> Preços atualizados
+                </span>
+                <span v-else-if="cotacao" key="data">Cotação de {{ dataCotacao }} · AwesomeAPI</span>
+                <span v-else key="vazio">&nbsp;</span>
+              </Transition>
+            </div>
           </div>
         </v-card>
       </v-col>
@@ -305,9 +354,122 @@ const indicadores = computed(() => [
   gap: 10px;
   font-size: 0.875rem;
 }
-.esqueleto {
-  background: transparent !important;
-  opacity: 0.35;
+.cambio {
+  position: relative;
+  overflow: hidden;
+}
+.barra-progresso {
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 2px;
+  opacity: 0;
+  background: linear-gradient(90deg, transparent, #f1d9a6, transparent);
+  background-size: 50% 100%;
+  background-repeat: no-repeat;
+  transition: opacity 0.3s ease;
+}
+.ocupado .barra-progresso {
+  opacity: 1;
+  animation: correr 1.1s linear infinite;
+}
+@keyframes correr {
+  from {
+    background-position: -50% 0;
+  }
+  to {
+    background-position: 150% 0;
+  }
+}
+.botao-atualizar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: #f1d9a6;
+  border: 1px solid rgba(241, 217, 166, 0.25);
+  transition: background 0.25s ease, transform 0.25s var(--curva);
+}
+.botao-atualizar:hover:not(:disabled) {
+  background: rgba(241, 217, 166, 0.12);
+  transform: rotate(-30deg);
+}
+.botao-atualizar:disabled {
+  cursor: progress;
+}
+.girando {
+  animation: girar 0.8s linear infinite;
+}
+@keyframes girar {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.moedas {
+  transition: filter 0.4s ease, opacity 0.4s ease;
+}
+.esmaecido {
+  filter: blur(3px);
+  opacity: 0.45;
+}
+.traco {
+  display: inline-block;
+  width: 110px;
+  height: 1.1rem;
+  border-radius: 6px;
+  background: linear-gradient(90deg, rgba(241, 217, 166, 0.1), rgba(241, 217, 166, 0.28), rgba(241, 217, 166, 0.1));
+  background-size: 200% 100%;
+  animation: brilho 1.2s ease-in-out infinite;
+}
+@keyframes brilho {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: -100% 0;
+  }
+}
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #f1d9a6;
+  font-weight: 600;
+}
+.status.ok {
+  color: #b9dcc3;
+}
+.pontos i {
+  font-style: normal;
+  animation: piscar 1.2s infinite;
+}
+.pontos i:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.pontos i:nth-child(3) {
+  animation-delay: 0.4s;
+}
+@keyframes piscar {
+  0%,
+  80%,
+  100% {
+    opacity: 0.2;
+  }
+  40% {
+    opacity: 1;
+  }
+}
+.troca-enter-active,
+.troca-leave-active {
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+.troca-enter-from {
+  opacity: 0;
+  transform: translateY(6px);
+}
+.troca-leave-to {
+  opacity: 0;
+  transform: translateY(-6px);
 }
 @media (max-width: 960px) {
   .heroi {
