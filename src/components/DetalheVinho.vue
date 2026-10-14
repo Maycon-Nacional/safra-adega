@@ -78,7 +78,9 @@ const { xs } = useDisplay()
 .grade {
   display: grid;
   grid-template-columns: minmax(240px, 0.85fr) 1.15fr;
+  overflow-x: hidden;
   overflow-y: auto;
+  scrollbar-gutter: auto;
 }
 .foto-grande {
   animation: revelar 0.7s var(--curva) both;
@@ -88,7 +90,18 @@ const { xs } = useDisplay()
 }
 .conteudo {
   padding: 32px 32px 28px;
-  animation: surgir 0.6s 0.1s var(--curva) both;
+  /* desliza na horizontal: subir/descer o conteúdo fazia a barra de rolagem aparecer e sumir na abertura */
+  animation: entrar-lado 0.6s 0.1s var(--curva) both;
+}
+@keyframes entrar-lado {
+  from {
+    opacity: 0;
+    transform: translateX(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 .titulo {
   font-size: clamp(1.6rem, 1.2rem + 1.4vw, 2.2rem);
