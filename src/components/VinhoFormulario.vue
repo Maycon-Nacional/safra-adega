@@ -6,6 +6,7 @@ import { TIPOS_VINHO, type Vinho, type VinhoSemId, type TipoVinho } from '@/type
 import { buscarPaises, mensagemDeErro, type Pais } from '@/services/ibge'
 import { hojeIso } from '@/utils/formato'
 import { avisar } from '@/services/aviso'
+import EditorImagem from './EditorImagem.vue'
 
 const props = defineProps<{ modelValue: boolean; vinho: Vinho | null }>()
 const emit = defineEmits<{
@@ -33,6 +34,7 @@ interface ValoresFormulario {
   prontoParaBeber: boolean
   organico: boolean
   notas: string
+  imagem: string
 }
 
 type Regra = (valor: any, ctx: { form: Record<string, any> }) => true | string
@@ -106,12 +108,13 @@ const esquema: Record<keyof ValoresFormulario, Regra> = {
   prontoParaBeber: () => true,
   organico: () => true,
   notas: (v) => (String(v ?? '').length > 280 ? 'As notas podem ter no máximo 280 caracteres.' : true),
+  imagem: () => true,
 }
 
 function valoresIniciais(): ValoresFormulario {
   if (props.vinho) {
     const { id: _id, ...resto } = props.vinho
-    return { ...resto }
+    return { ...resto, imagem: resto.imagem ?? '' }
   }
   return {
     rotulo: '',
@@ -127,6 +130,7 @@ function valoresIniciais(): ValoresFormulario {
     prontoParaBeber: true,
     organico: false,
     notas: '',
+    imagem: '',
   }
 }
 
@@ -148,6 +152,7 @@ const [dataAquisicao, dataProps] = defineField('dataAquisicao', configVuetify)
 const [prontoParaBeber] = defineField('prontoParaBeber')
 const [organico] = defineField('organico')
 const [notas, notasProps] = defineField('notas', configVuetify)
+const [imagem] = defineField('imagem')
 
 /* ---------------- API do IBGE (Axios) ---------------- */
 
@@ -210,6 +215,7 @@ const enviar = handleSubmit(
       prontoParaBeber: Boolean(v.prontoParaBeber),
       organico: Boolean(v.organico),
       notas: (v.notas ?? '').trim(),
+      imagem: v.imagem ?? '',
     }
     emit('salvar', dados, props.vinho?.id ?? null)
   },
@@ -342,6 +348,9 @@ const enviar = handleSubmit(
               </div>
             </v-col>
           </v-row>
+
+          <div class="secao">Foto da garrafa <span class="fonte">opcional</span></div>
+          <EditorImagem v-model="imagem" :tipo="tipo" />
 
           <div class="secao">Notas de degustação</div>
           <v-textarea v-model="notas" v-bind="notasProps" label="Notas (opcional)" rows="2" auto-grow counter="280" />
