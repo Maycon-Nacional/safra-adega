@@ -56,6 +56,7 @@ export default createVuetify({
     VTextarea: { variant: 'outlined', density: 'comfortable', color: 'primary' },
     VSelect: { variant: 'outlined', density: 'comfortable', color: 'primary' },
     VAutocomplete: { variant: 'outlined', density: 'comfortable', color: 'primary' },
+    VNumberInput: { variant: 'outlined', density: 'comfortable', color: 'primary' },
     VBtn: { style: 'text-transform: none; letter-spacing: 0.01em;' },
     VCard: { rounded: 'lg' },
     VSwitch: { color: 'primary', inset: true },
