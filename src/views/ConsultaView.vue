@@ -4,6 +4,9 @@ import { useRoute, useRouter } from 'vue-router'
 import { vinhos } from '@/services/storage'
 import { filtrosVazios, type FiltrosConsulta, type FiltroBooleano, type Vinho } from '@/types/vinho'
 import { formatarData, formatarMoeda, normalizar, simNao } from '@/utils/formato'
+import { exportarCsv } from '@/utils/csv'
+import { avisar } from '@/services/aviso'
+import { hojeIso } from '@/utils/formato'
 import { filtrosDaUrl, modoDaUrl, ordemDaUrl, paraQuery, type ModoConsulta, type OrdemConsulta } from '@/utils/filtros-url'
 import CabecalhoPagina from '@/components/CabecalhoPagina.vue'
 import BarraFiltros from '@/components/BarraFiltros.vue'
@@ -99,6 +102,11 @@ const filtrosAtivos = computed(() => {
   ].filter(Boolean).length
 })
 
+function exportar() {
+  exportarCsv(resultados.value, `adega-safra-${hojeIso()}.csv`)
+  avisar(`${resultados.value.length} ${resultados.value.length === 1 ? 'registro exportado' : 'registros exportados'} para CSV.`)
+}
+
 function limparFiltros() {
   filtros.value = filtrosVazios()
 }
@@ -155,6 +163,15 @@ const cabecalhos = [
           label="Ordenar por"
           class="campo-ordem"
         />
+        <v-btn
+          variant="tonal"
+          color="primary"
+          prepend-icon="mdi-file-delimited-outline"
+          :disabled="!resultados.length"
+          @click="exportar"
+        >
+          Exportar CSV
+        </v-btn>
         <v-btn-toggle v-model="modo" mandatory density="compact" variant="outlined" color="primary" divided rounded="lg">
           <v-btn value="cartoes" icon="mdi-view-grid-outline" aria-label="Ver em cartões" />
           <v-btn value="tabela" icon="mdi-table" aria-label="Ver em tabela" />
