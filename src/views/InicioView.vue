@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { vinhos } from '@/services/storage'
+import { buscarCotacao, mensagemDeErroCotacao, type Cotacao } from '@/services/cotacao'
+import { avisar } from '@/services/aviso'
 import { formatarData, formatarMoeda } from '@/utils/formato'
 import TacaAnimada from '@/components/TacaAnimada.vue'
 import ContadorAnimado from '@/components/ContadorAnimado.vue'
@@ -10,6 +12,34 @@ const totalRotulos = computed(() => vinhos.value.length)
 const totalGarrafas = computed(() => vinhos.value.reduce((s, v) => s + v.garrafas, 0))
 const valorAcervo = computed(() => vinhos.value.reduce((s, v) => s + v.preco * v.garrafas, 0))
 const prontos = computed(() => vinhos.value.filter((v) => v.prontoParaBeber && v.garrafas > 0).length)
+
+const cotacao = ref<Cotacao | null>(null)
+const carregandoCotacao = ref(false)
+const erroCotacao = ref('')
+
+async function carregarCotacao() {
+  carregandoCotacao.value = true
+  erroCotacao.value = ''
+  try {
+    cotacao.value = await buscarCotacao()
+  } catch (erro) {
+    erroCotacao.value = mensagemDeErroCotacao(erro)
+    avisar(erroCotacao.value, 'erro')
+  } finally {
+    carregandoCotacao.value = false
+  }
+}
+
+onMounted(carregarCotacao)
+
+const emDolar = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'USD' })
+const emEuro = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'EUR' })
+
+const dataCotacao = computed(() => {
+  if (!cotacao.value) return ''
+  const [dia, hora] = cotacao.value.atualizadoEm.split(' ')
+  return `${formatarData(dia)} às ${hora.slice(0, 5)}`
+})
 
 const recentes = computed(() =>
   [...vinhos.value].sort((a, b) => b.dataAquisicao.localeCompare(a.dataAquisicao)).slice(0, 4),
@@ -99,6 +129,52 @@ const indicadores = computed(() => [
             <span>Preço médio por rótulo</span>
             <strong>{{ formatarMoeda(totalRotulos ? vinhos.reduce((s, v) => s + v.preco, 0) / totalRotulos : 0) }}</strong>
           </div>
+
+          <div class="cambio mt-5" aria-live="polite">
+            <div class="d-flex justify-space-between align-center mb-3">
+              <span class="sobretitulo cambio-titulo">Em moeda estrangeira</span>
+              <v-btn
+                icon="mdi-refresh"
+                size="x-small"
+                variant="text"
+                color="#F1D9A6"
+                :loading="carregandoCotacao"
+                aria-label="Atualizar cotação"
+                @click="carregarCotacao"
+              />
+            </div>
+
+            <div v-if="carregandoCotacao && !cotacao" class="moedas">
+              <v-skeleton-loader v-for="n in 2" :key="n" type="text" class="esqueleto" />
+            </div>
+
+            <div v-else-if="erroCotacao && !cotacao" class="erro-cambio">
+              <span>{{ erroCotacao }}</span>
+              <v-btn size="small" variant="outlined" color="#F1D9A6" :loading="carregandoCotacao" @click="carregarCotacao">
+                Tentar de novo
+              </v-btn>
+            </div>
+
+            <template v-else-if="cotacao">
+              <div class="moedas">
+                <div class="moeda">
+                  <span class="moeda-sigla">USD</span>
+                  <span class="titulo-serifa moeda-valor">
+                    <ContadorAnimado :valor="valorAcervo / cotacao.dolar" :formatar="(n) => emDolar.format(n)" />
+                  </span>
+                  <span class="moeda-taxa">US$ 1 = {{ formatarMoeda(cotacao.dolar) }}</span>
+                </div>
+                <div class="moeda">
+                  <span class="moeda-sigla">EUR</span>
+                  <span class="titulo-serifa moeda-valor">
+                    <ContadorAnimado :valor="valorAcervo / cotacao.euro" :formatar="(n) => emEuro.format(n)" />
+                  </span>
+                  <span class="moeda-taxa">€ 1 = {{ formatarMoeda(cotacao.euro) }}</span>
+                </div>
+              </div>
+              <div class="cambio-rodape">Cotação de {{ dataCotacao }} · AwesomeAPI</div>
+            </template>
+          </div>
         </v-card>
       </v-col>
     </v-row>
@@ -180,6 +256,58 @@ const indicadores = computed(() => [
   font-size: clamp(2rem, 1.5rem + 2vw, 2.8rem);
   margin-top: 6px;
   color: #f1d9a6;
+}
+.cambio {
+  padding: 16px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.18);
+  border: 1px solid rgba(241, 217, 166, 0.18);
+}
+.cambio-titulo {
+  color: #e2c58e !important;
+}
+.moedas {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+.moeda {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  animation: surgir 0.6s var(--curva) both;
+}
+.moeda + .moeda {
+  animation-delay: 90ms;
+}
+.moeda-sigla {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: rgba(248, 239, 226, 0.55);
+}
+.moeda-valor {
+  font-size: 1.35rem;
+  color: #f8efe2;
+}
+.moeda-taxa,
+.cambio-rodape {
+  font-size: 0.75rem;
+  color: rgba(248, 239, 226, 0.6);
+}
+.cambio-rodape {
+  margin-top: 12px;
+}
+.erro-cambio {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 0.875rem;
+}
+.esqueleto {
+  background: transparent !important;
+  opacity: 0.35;
 }
 @media (max-width: 960px) {
   .heroi {
