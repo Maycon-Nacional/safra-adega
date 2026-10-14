@@ -18,10 +18,10 @@ Sistema para organizar uma adega pessoal de vinhos. A entidade cadastrada é o *
 | Uva(s) | texto | `v-text-field` |
 | País de origem | seleção (API do IBGE) | `v-autocomplete` |
 | Continente | texto (preenchido pela API) | `v-text-field` somente leitura |
-| Safra | número | `v-text-field type="number"` |
-| Preço por garrafa | número | `v-text-field type="number"` |
-| Garrafas em estoque | número | `v-text-field type="number"` |
-| Data de aquisição | data | `v-text-field type="date"` |
+| Safra | número | `v-number-input` |
+| Preço por garrafa | número (R$) | `CampoMoeda` (`v-text-field` com máscara de reais) |
+| Garrafas em estoque | número | `v-number-input` |
+| Data de aquisição | data | `CampoData` (`v-menu` + `v-date-picker`) |
 | Pronto para beber | booleano | `v-switch` |
 | Orgânico | booleano | `v-switch` |
 | Notas de degustação | texto (opcional) | `v-textarea` |
@@ -38,18 +38,25 @@ Sistema para organizar uma adega pessoal de vinhos. A entidade cadastrada é o *
   - tipo (seleção múltipla);
   - país (seleção múltipla);
   - faixa de preço (de/até);
-  - intervalo de data de aquisição (de/até);
+  - faixa de safra (`v-range-slider`);
+  - intervalo de data de aquisição (de/até, com calendário);
   - pronto para beber (todos/sim/não);
   - orgânico (todos/sim/não).
 
   Os filtros são aplicados juntos via `computed`, há botão **Limpar filtros**, contador de resultados,
-  ordenação e mensagem quando nada é encontrado.
+  ordenação e mensagem quando nada é encontrado. Os filtros ficam na URL (a consulta pode ser recarregada ou
+  compartilhada) e os resultados filtrados podem ser baixados em **CSV** (separador `;`, abre direto no Excel).
+- **Estoque baixo**: a página da adega avisa quantos rótulos estão esgotados ou com a última garrafa, destaca
+  essas linhas e permite listar só eles.
 - **Dados compartilhados e persistentes**: `src/services/storage.ts` concentra a leitura (`JSON.parse`) e a
   gravação (`JSON.stringify`) no `localStorage` e expõe uma lista reativa usada pelas duas páginas.
-- **API consumida**: [IBGE – Localidades/Países](https://servicodados.ibge.gov.br/api/docs/localidades) via
-  **Axios** (`src/services/ibge.ts`). O país escolhido preenche o continente automaticamente; o campo mostra
-  `:loading` durante a requisição e erros (sem internet, tempo esgotado, erro do servidor) são tratados com
-  `try/catch`, aviso ao usuário e botão para tentar de novo.
+- **APIs consumidas** (ambas com **Axios**, indicador de carregamento e tratamento de erro com `try/catch`):
+  - [IBGE – Localidades/Países](https://servicodados.ibge.gov.br/api/docs/localidades)
+    (`src/services/ibge.ts`): carrega os países no formulário; o país escolhido preenche o continente.
+    Erros (sem internet, tempo esgotado, erro do servidor) mostram aviso e botão para tentar de novo.
+  - [AwesomeAPI – Cotações](https://docs.awesomeapi.com.br/api-de-moedas) (`src/services/cotacao.ts`):
+    busca a cotação do dólar e do euro e a página inicial mostra o valor estimado do acervo em US$ e €,
+    com data e hora da cotação, animação durante a atualização e botão para atualizar ou tentar de novo.
 - **Fotos dos vinhos**: no cadastro e na edição é possível arrastar ou escolher uma imagem (JPG, PNG ou WebP,
   até 8 MB), com pré-visualização e editor de enquadramento: arrastar para posicionar, zoom, girar, opção
   **Preencher** (corta as bordas) ou **Ajustar inteira** (foto completa com fundo neutro). A imagem final é
@@ -65,10 +72,10 @@ Sistema para organizar uma adega pessoal de vinhos. A entidade cadastrada é o *
 src/
 ├── components/   MenuLateral, VinhoFormulario, EditorImagem, BarraFiltros, CartaoVinho, CartaoCatalogo, ...
 ├── views/        InicioView, AdegaView (CRUD), ConsultaView, CatalogoView, NaoEncontradaView
-├── services/     storage.ts (localStorage), ibge.ts (Axios), aviso.ts (snackbar)
+├── services/     storage.ts (localStorage), ibge.ts e cotacao.ts (Axios), aviso.ts (snackbar)
 ├── router/       rotas da aplicação
 ├── types/        tipo Vinho e filtros
-└── utils/        formatação de moeda, data e texto
+└── utils/        formatação, filtros na URL e exportação CSV
 ```
 
 ## Créditos das imagens
