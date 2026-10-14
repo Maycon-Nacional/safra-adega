@@ -29,6 +29,16 @@ const vitrine = computed(() => {
     .sort((a, b) => Number(b.garrafas > 0) - Number(a.garrafas > 0) || a.rotulo.localeCompare(b.rotulo, 'pt-BR'))
 })
 
+// o cartão que sai fica absoluto para os outros se reorganizarem; antes disso ele guarda
+// tamanho e posição atuais, senão perde a largura da coluna e a foto aparece gigante
+function fixarAoSair(el: Element) {
+  const item = el as HTMLElement
+  item.style.width = `${item.offsetWidth}px`
+  item.style.height = `${item.offsetHeight}px`
+  item.style.left = `${item.offsetLeft}px`
+  item.style.top = `${item.offsetTop}px`
+}
+
 function abrir(vinho: Vinho) {
   selecionado.value = vinho
   detalheAberto.value = true
@@ -74,7 +84,7 @@ function abrir(vinho: Vinho) {
       </button>
     </div>
 
-    <TransitionGroup v-if="vitrine.length" name="lista" tag="div" class="grade" appear>
+    <TransitionGroup v-if="vitrine.length" name="vitrine" :duration="{ enter: 0, leave: 300 }" tag="div" class="grade" @before-leave="fixarAoSair">
       <div v-for="(v, i) in vitrine" :key="v.id" class="item" :style="{ '--i': Math.min(i, 12) }">
         <CartaoCatalogo :vinho="v" @abrir="abrir" />
       </div>
@@ -147,8 +157,22 @@ function abrir(vinho: Vinho) {
 }
 .item {
   min-width: 0;
+  /* a entrada (inclusive ao trocar de filtro) fica a cargo desta animação em cascata */
   animation: surgir 0.7s var(--curva) both;
   animation-delay: calc(var(--i) * 60ms);
+}
+.vitrine-move {
+  transition: transform 0.55s var(--curva);
+}
+.vitrine-leave-active {
+  /* sem isso a animação de entrada (fill: both) segura a opacidade e o cartão nunca termina de sair */
+  animation: none !important;
+  position: absolute;
+  transition: opacity 0.25s ease, transform 0.3s ease;
+}
+.vitrine-leave-to {
+  opacity: 0;
+  transform: scale(0.94);
 }
 .vazio {
   text-align: center;
